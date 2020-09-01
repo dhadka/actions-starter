@@ -43,7 +43,7 @@ function echo(value: string): StringOutput {
 }
 
 function execute(command: string, args?: string[]): string {
-    console.log(`Running ${command} ${args?.join(" ")}`)
+    console.log(`Running ${command} ${args ? args?.join(" "): ""}`)
     const returnValue = execa.sync(command, args)
     return returnValue.stdout
 }
@@ -66,12 +66,6 @@ function writePackageJson(name: string, repo?: string, license: string = "ISC", 
     "keywords": [],
     "author": "",
     "license": "${license}"`
-
-    // "prepare": "npm run build",
-    // "prepublishOnly": "npm test && npm run lint",
-    // "preversion": "npm run lint",
-    // "version": "npm run format && git add -A src",
-    // "postversion": "git push && git push --tags"
 
     if (repo) {
         const url = repo.endsWith(".git") ? repo.substring(0, repo.length-4) : repo
@@ -201,7 +195,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - run: npm ci
+      - run: npm install
+      - run: npm run build
+      - run: npm run test
+      - run: npm run lint
 `).toFile(".github/workflows/main.yml")
 }
 
@@ -212,64 +209,87 @@ function writeReadme(name: string) {
 }
 
 program
-  .version('1.0.0')
-  .description("Generate starter projects for NodeJS, Typescript, or GitHub Actions")
-  .option('-t, --template', 'The template to follow (default \'node\')')
-  .option('-p, --project', 'The name of the project')
-  .option('-l, --license', 'The license to use (default \'ISC\')')
-  .option('-v, --initialVersion', 'The intial version (default \'1.0.0\')')
-  .parse(process.argv);
+    .version('1.0.0')
+    .name("actions")
+    .description("Generate starter projects for NodeJS, Typescript, or GitHub Actions")
 
-const availableTypes = ['node', 'typescript', 'action']
-let type = 'typescript'
-let name = path.basename(process.cwd())
-let repo: string | undefined = undefined
-let license = "ISC"
-let version = "1.0.0"
+program
+    .command("open")
+    .action((inputs) => {
+        execute("code", [process.cwd()])
+    })
 
-if (program.type) {
-    type = program.type.toLowerCase()
-}
+program
+    .command("init")
+    .option('-t, --template <str>', 'The template to follow (default \'node\')')
+    .option('-p, --project <str>', 'The name of the project')
+    .option('-l, --license <str>', 'The license to use (default \'ISC\')')
+    .option('-v, --initialVaersion <str>', 'The intial version (default \'1.0.0\')')
+    .option('-r, --repo <str>', 'The repo to clone')
+    .action((inputs) => {
+        let type = 'typescript'
+        let name = path.basename(process.cwd())
+        let repo: string | undefined = undefined
+        let license = "ISC"
+        let version = "1.0.0"
 
-if (program.project) {
-    name = program.project
-}
-
-if (program.license) {
-    license = program.license
-}
-
-if (program.initialVersion) {
-    version = program.initialVersion
-}
-
-    cd("..")
-    mkdir("test-proj")
-    cd("test-proj")
-
-    if (exists(".git")) {
-        try {
-            repo = execute("git", ["remote", "get-url", "origin"])
-        } catch (error) {
-            console.log("Unable to determine remote repo")
+        for (let file of fs.readdirSync(".")) {
+            if (file !== ".git" && file !== "package.json") {
+                console.warn("Directory is not empty")
+                process.exit(-1)
+            }
         }
-    } else {
-        execute("git", ["init"])
-    }
+        
+        if (inputs.type) {
+            type = inputs.type.toLowerCase()
+        }
+        
+        if (inputs.project) {
+            name = inputs.project
+        }
+        
+        if (inputs.license) {
+            license = inputs.license
+        }
+        
+        if (inputs.initialVersion) {
+            version = inputs.initialVersion
+        }
+        
+        if (inputs.repo) {
+            repo = inputs.repo
+        }
+        
+        if (exists(".git")) {
+            try {
+                repo = execute("git", ["remote", "get-url", "origin"])
+            } catch (error) {
+                console.log("Unable to determine remote repo")
+            }
+        } else {
+            execute("git", ["init"])
+        
+            if (repo) {
+                execute("git", ["remote", "add", "origin", repo])
+            }
+        }
+        
+        writePackageJson(name, repo, license, version)
+        writeTslintJson()
+        writeTsconfigJson()
+        writeJestConfigJson()
+        writePrettierRc()
+        writeGitIgnore()
+        writeActionYml(name)
+        writeReadme(name)
+        mkdir("src")
+        writeIndexJs()
+        mkdir("src/__tests__")
+        writeTestJs()
+        execute("npm", ["install", "--save-dev", "@types/jest", "jest", "ts-jest", "prettier", "tslint", "tslint-config-prettier", "typescript", "@zeit/ncc"])
+        execute("npm", ["install", "@actions/core"])
+        mkdir(".github/workflows")
+        writeCIAction()
+    })
 
-    writePackageJson(name, repo, license, version)
-    writeTslintJson()
-    writeTsconfigJson()
-    writeJestConfigJson()
-    writePrettierRc()
-    writeGitIgnore()
-    writeActionYml(name)
-    writeReadme(name)
-    mkdir("src")
-    mkdir("src/__tests__")
-    writeIndexJs()
-    writeTestJs()
-    execute("npm", ["install", "--save-dev", "@types/jest", "jest", "ts-jest", "prettier", "tslint", "tslint-config-prettier", "typescript"])
-    execute("npm", ["install", "@actions/core"])
-    mkdir(".github/workflows")
-    writeCIAction()
+program.parse(process.argv);
