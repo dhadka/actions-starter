@@ -1,6 +1,6 @@
 {
   "name": "actions-starter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Quickly configure repos for writing new GitHub Actions",
   "main": "lib/index.js",
   "bin": {
@@ -15,15 +15,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dhadka/stockpile-copy.git"
+    "url": "git+https://github.com/dhadka/actions-starter.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/dhadka/stockpile-copy/issues"
+    "url": "https://github.com/dhadka/actions-starter/issues"
   },
-  "homepage": "https://github.com/dhadka/stockpile-copy#readme",
+  "homepage": "https://github.com/dhadka/actions-starter#readme",
   "devDependencies": {
     "@types/jest": "^26.0.10",
     "jest": "^26.4.2",
