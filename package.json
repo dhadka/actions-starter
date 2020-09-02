@@ -1,7 +1,7 @@
 {
   "name": "actions-starter",
-  "version": "0.0.15",
-  "description": "Set up NodeJS, Typescript, or GitHub Actions projects",
+  "version": "1.0.0",
+  "description": "Quickly configure repos for writing new GitHub Actions",
   "main": "lib/index.js",
   "bin": {
     "actions": "lib/index.js"

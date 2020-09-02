@@ -1,16 +1,22 @@
 # Actions Starter
 
-Quickly set up projects for publishing modules using NodeJS, Typescript, or GitHub Actions.
+Quickly configure repos for writing new GitHub Actions
 
 ## Setup Project
 
 ```
 mkdir test-starter
 cd test-starter
-actions init --template actions --repo https://github.com/dhadka/test-starter
+actions init --repo https://github.com/dhadka/test-starter
 ```
 
 ## Open in Editor
+
+```
+actions edit
+```
+
+## Open GitHub Repo in Browser
 
 ```
 actions open

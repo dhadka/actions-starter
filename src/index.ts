@@ -24,7 +24,7 @@ import {
 program
     .version('1.0.0')
     .name("actions")
-    .description("Generate starter projects for NodeJS, Typescript, or GitHub Actions")
+    .description("Quickly configure repos for writing new GitHub Actions")
 
 program
     .command("edit")
@@ -45,13 +45,11 @@ program
 program
     .command("init")
     .description("Initialize a new project")
-    .option('-t, --template <str>', 'The template to follow (default \'action\')')
     .option('-p, --project <str>', 'The name of the project')
     .option('-l, --license <str>', 'The license to use (default \'ISC\')')
     .option('-v, --initialVaersion <str>', 'The intial version (default \'1.0.0\')')
     .option('-r, --repo <str>', 'The repo to clone')
     .action((inputs) => {
-        let type = 'typescript'
         let name = path.basename(process.cwd())
         let repo: string | undefined = undefined
         let branch: string | undefined = undefined
@@ -63,10 +61,6 @@ program
                 console.warn("Directory is not empty")
                 process.exit(-1)
             }
-        }
-        
-        if (inputs.type) {
-            type = inputs.type.toLowerCase()
         }
         
         if (inputs.project) {
