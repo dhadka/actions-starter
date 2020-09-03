@@ -1,7 +1,8 @@
-import * as fs from 'fs';
-import * as execa from 'execa';
-import * as url from 'url';
+import * as fs from 'fs'
+import * as execa from 'execa'
+import * as url from 'url'
 import * as open from 'open'
+import * as license from 'license'
 
 class StringOutput {
   value: string;
@@ -55,10 +56,12 @@ export function execute(command: string, args?: string[], quiet: boolean = false
 
 export function writePackageJson(
   name: string,
+  author: string,
   repo?: string,
   license: string = 'ISC',
   description: string = "",
-  version: string = '1.0.0'
+  version: string = '1.0.0',
+  test: string = 'jest'
 ) {
   console.log('Writing package.json');
 
@@ -68,14 +71,23 @@ export function writePackageJson(
     "description": "${description.replace('"', '\\"')}",
     "main": "lib/index.js",
     "scripts": {
-        "run": "npm run build && node lib/index.js",
-        "test": "jest --config jestconfig.json",
+        "run": "npm run build && node lib/index.js",`
+
+  if (test === 'jest') {
+    content += `
+        "test": "jest --config jestconfig.json",`
+  } else if (test === 'mocha') {
+    content += `
+        "test": "mocha -r ts-node/register src/**/*.test.ts",`
+  }
+
+  content += `
         "build": "tsc && ncc build -o dist src/index.ts",
         "format": "prettier --write \\"src/**/*.ts\\"",
         "lint": "tslint -p tsconfig.json"
     },
     "keywords": [],
-    "author": "",
+    "author": "${author}",
     "license": "${license}"`;
 
   if (repo) {
@@ -157,7 +169,7 @@ core.info(greet(nameInput))
 `).toFile('src/index.ts');
 }
 
-export function writeTestJs() {
+export function writeJestTest() {
   console.log('Writing src/__tests__/index.test.ts');
 
   echo(`import { greet } from '../index'
@@ -166,6 +178,19 @@ test('greet', () => {
     expect(greet("Dave")).toBe("Hello Dave")
 })
 `).toFile('src/__tests__/index.test.ts');
+}
+
+export function writeMochaTest() {
+  console.log('Writing src/__tests__/index.test.ts')
+
+  echo(`import * as assert from 'assert'
+import { greet } from '../index'
+
+describe('greet', function () {
+    it('should say hello', function () {
+        assert.equal(greet("Dave"), "Hello Dave")
+    })
+})`).toFile('src/__tests__/index.test.ts')
 }
 
 export function writeGitIgnore() {
@@ -211,7 +236,7 @@ jobs:
       - uses: actions/checkout@v2
       - run: npm install
       - run: npm run build
-      - run: npm run test
+      - run: npm test
       - run: npm run lint
 `).toFile('.github/workflows/main.yml');
 }
@@ -244,7 +269,7 @@ This is a starter action produced by [actions-starter](https://www.npmjs.com/pac
 To use this action, add the following step to your GitHub Actions workflow:
 \`\`\`
 - name: Say hi to Dave
-  uses: ${nwo}@master
+  uses: ${nwo}@v1
   with:
     name: Dave
 \`\`\`
@@ -252,6 +277,21 @@ To use this action, add the following step to your GitHub Actions workflow:
   }
 
   echo(content).toFile('README.md');
+}
+
+export function addLicenseText(licenseName: string, authorName: string) {
+  console.log('Writing LICENSE')
+
+  try {
+    const licenseText = license.getLicense(licenseName, {
+      author: authorName,
+      year: (new Date()).getFullYear().toString()
+    })
+
+    fs.writeFileSync("LICENSE", licenseText)
+  } catch (error) {
+    console.log(`Failed to generate LICENSE file. You will need to add the LICENSE file yourself.`)
+  }
 }
 
 export function getVersion() {

@@ -1,6 +1,6 @@
 {
   "name": "actions-starter",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Quickly configure repos for writing new GitHub Actions",
   "main": "lib/index.js",
   "bin": {
@@ -38,6 +38,7 @@
     "chalk": "^4.1.0",
     "commander": "^6.1.0",
     "execa": "^4.0.3",
+    "license": "^1.0.3",
     "open": "^7.2.1",
     "semver": "^7.3.2"
   }

@@ -18,10 +18,12 @@ import {
     writeReadme,
     mkdir,
     writeIndexJs,
-    writeTestJs,
+    writeJestTest,
+    writeMochaTest,
     writeCIAction,
     getVersion,
-    browse
+    browse,
+    addLicenseText
 } from './steps'
 
 program
@@ -55,21 +57,24 @@ program
 program
     .command("init")
     .description("initialize a new GitHub Actions project")
+    .option('-a | --author', "The name(s) of the author")
     .option('-p, --project <str>', 'The name of the project')
-    .option('-l, --license <str>', 'The license to use (default \'ISC\')')
-    .option('-d, --shortDescription <str>', 'A short description of the project')
-    .option('-v, --initialVaersion <str>', 'The intial version (default \'1.0.0\')')
+    .option('-l, --license <str>', 'The license to use (default \'MIT\')', 'MIT')
+    .option('-d, --shortDescription <str>', 'A short description of the project', '')
+    .option('-v, --initialVersion <str>', 'The intial version (default \'1.0.0\')', '1.0.0')
     .option('-r, --repo <str>', 'The repo to clone')
+    .option('-t, --test <str>', 'The test framework to use, such as \'jest\' (default) or \'mocha\'', 'jest')
     .option('--deps <dependencies...>', 'List of additional dependencies to install')
-    .option('--dev-deps <dependencies...>', 'List of additional dev dependencies to install')
+    .option('--devDeps <dependencies...>', 'List of additional dev dependencies to install')
     .action((inputs) => {
-        let name = path.basename(process.cwd())
-        let repo: string | undefined = undefined
-        let branch: string | undefined = undefined
-        let license = "ISC"
-        let description = ""
-        let version = "1.0.0"
-        let devDeps = ["@types/jest", "jest", "ts-jest", "prettier", "tslint", "tslint-config-prettier", "typescript", "@zeit/ncc"]
+        let name = inputs.project || path.basename(process.cwd())
+        let author = inputs.author || execute("git", ["config", "user.name"], true)
+        let repo = inputs.repo
+        let license = inputs.license
+        let description = inputs.shortDescription
+        let version = inputs.initialVersion
+        let test = inputs.test.toLowerCase()
+        let devDeps = ["prettier", "tslint", "tslint-config-prettier", "typescript", "@zeit/ncc"]
         let deps = ["@actions/core"]
 
         for (let file of fs.readdirSync(".")) {
@@ -78,27 +83,15 @@ program
                 process.exit(-1)
             }
         }
-        
-        if (inputs.project) {
-            name = inputs.project
-        }
-        
-        if (inputs.license) {
-            license = inputs.license
-        }
 
-        if (inputs.shortDescription) {
-            description = inputs.shortDescription
+        if (test === 'jest') {
+            devDeps = devDeps.concat(["@types/jest", "jest", "ts-jest"])
+        } else if (test === 'mocha') {
+            devDeps = devDeps.concat(["mocha", "ts-node"])
+        } else {
+            throw Error(`${inputs.test} is not a supported test framework`)
         }
         
-        if (inputs.initialVersion) {
-            version = inputs.initialVersion
-        }
-        
-        if (inputs.repo) {
-            repo = inputs.repo
-        }
-
         if (inputs.devDeps) {
             devDeps = devDeps.concat(inputs.devDeps)
         }
@@ -123,20 +116,27 @@ program
             }
         }
 
-        branch = execute("git", ["branch", "--show-current"])
+        const branch = execute("git", ["branch", "--show-current"], true)
         
-        writePackageJson(name, repo, license, description, version)
+        writePackageJson(name, author, repo, license, description, version, test)
         writeTslintJson()
         writeTsconfigJson()
-        writeJestConfigJson()
         writePrettierRc()
         writeGitIgnore()
         writeActionYml(name)
         writeReadme(name, repo)
+        addLicenseText(license, author)
         mkdir("src")
         writeIndexJs()
         mkdir("src/__tests__")
-        writeTestJs()
+
+        if (test === 'jest') {
+            writeJestConfigJson()
+            writeJestTest()
+        } else if (test === 'mocha') {
+            writeMochaTest()
+        }
+
         execute("npm", ["install", "--save-dev"].concat(devDeps))
         execute("npm", ["install"].concat(deps))
         mkdir(".github/workflows")
