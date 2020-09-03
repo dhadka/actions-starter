@@ -20,46 +20,60 @@ import {
     writeIndexJs,
     writeTestJs,
     writeCIAction,
-    getVersion
+    getVersion,
+    browse
 } from './steps'
 
 program
-    .version('1.0.0')
+    .version(require('../package.json').version)
     .name("actions")
     .description("Quickly configure repos for writing new GitHub Actions")
 
 program
     .command("edit")
-    .description("Edit project in VSCode")
+    .description("edit project in VSCode")
     .action((inputs) => {
-        execute("code", [process.cwd()])
+        execute("code", [process.cwd()], true)
     })
 
 program
     .command("open")
-    .description("Open project on GitHub")
+    .description("open project on GitHub")
     .action((inputs) => {
         const repo = execute("git", ["remote", "get-url", "origin"])
         const url = repo.endsWith(".git") ? repo.substring(0, repo.length-4) : repo
-        execute("start", ["/max", url])
+        browse(url)
+    })
+
+program
+    .command("docs")
+    .description("open GitHub Actions documentation")
+    .action((inputs) => {
+        browse("https://docs.github.com/en/actions")
     })
 
 program
     .command("init")
-    .description("Initialize a new project")
+    .description("initialize a new GitHub Actions project")
     .option('-p, --project <str>', 'The name of the project')
     .option('-l, --license <str>', 'The license to use (default \'ISC\')')
+    .option('-d, --shortDescription <str>', 'A short description of the project')
     .option('-v, --initialVaersion <str>', 'The intial version (default \'1.0.0\')')
     .option('-r, --repo <str>', 'The repo to clone')
+    .option('--deps <dependencies...>', 'List of additional dependencies to install')
+    .option('--dev-deps <dependencies...>', 'List of additional dev dependencies to install')
     .action((inputs) => {
         let name = path.basename(process.cwd())
         let repo: string | undefined = undefined
         let branch: string | undefined = undefined
         let license = "ISC"
+        let description = ""
         let version = "1.0.0"
+        let devDeps = ["@types/jest", "jest", "ts-jest", "prettier", "tslint", "tslint-config-prettier", "typescript", "@zeit/ncc"]
+        let deps = ["@actions/core"]
 
         for (let file of fs.readdirSync(".")) {
-            if (file !== ".git" && file !== "package.json") {
+            if (file !== ".git") {
                 console.warn("Directory is not empty")
                 process.exit(-1)
             }
@@ -72,6 +86,10 @@ program
         if (inputs.license) {
             license = inputs.license
         }
+
+        if (inputs.shortDescription) {
+            description = inputs.shortDescription
+        }
         
         if (inputs.initialVersion) {
             version = inputs.initialVersion
@@ -79,6 +97,14 @@ program
         
         if (inputs.repo) {
             repo = inputs.repo
+        }
+
+        if (inputs.devDeps) {
+            devDeps = devDeps.concat(inputs.devDeps)
+        }
+
+        if (inputs.deps) {
+            deps = deps.concat(inputs.deps)
         }
 
         console.log(chalk.bold.underline(`Generating GitHub Actions project ${name}`))
@@ -99,7 +125,7 @@ program
 
         branch = execute("git", ["branch", "--show-current"])
         
-        writePackageJson(name, repo, license, version)
+        writePackageJson(name, repo, license, description, version)
         writeTslintJson()
         writeTsconfigJson()
         writeJestConfigJson()
@@ -111,8 +137,8 @@ program
         writeIndexJs()
         mkdir("src/__tests__")
         writeTestJs()
-        execute("npm", ["install", "--save-dev", "@types/jest", "jest", "ts-jest", "prettier", "tslint", "tslint-config-prettier", "typescript", "@zeit/ncc"])
-        execute("npm", ["install", "@actions/core"])
+        execute("npm", ["install", "--save-dev"].concat(devDeps))
+        execute("npm", ["install"].concat(deps))
         mkdir(".github/workflows")
         writeCIAction()
 
@@ -132,6 +158,7 @@ program
 
 program
     .command("publish [version]")
+    .description("publish the action by bumping the version number, creating version tags, and pushing to GitHub")
     .option("-u, --update", "Add or update the major version tag, such as v2")
     .action((version, options) => { 
         if (execute("git", ["status", "--porcelain"], true).toString().trim() !== '') {
@@ -141,8 +168,8 @@ program
 
         if (!version) {
             version = getVersion()
-            
-            if (execute("git", ["tag", "-l", `v${version}`]).toString().trim() !== '') {
+
+            if (execute("git", ["tag", "-l", `v${version}`], true).toString().trim() !== '') {
                 console.error(`Tag v${version} already exists, can not publish`)
                 process.exit(-1)
             }
@@ -150,10 +177,10 @@ program
             execute("git", ["tag", `v${version}`])
         } else {
             execute("npm", ["version", version])
-        }
 
-        version = getVersion()
-        console.log(`New version is ${version}`)
+            version = getVersion()
+            console.log(`New version is ${version}`)
+        }
 
         if (options.update) {
             const major = semver.major(version)
@@ -163,8 +190,9 @@ program
         if (execute("git", ["remote", "-v"], true).toString().trim() === '') {
             console.log("No Git remote is configured. Will not push changes.")
         } else {
-            execute("git", ["push"])
-            execute("git", ["push", "--tags"])
+            // TODO: Only publish from master
+            execute("git", ["push", "origin", "master"])
+            execute("git", ["push", "--tags", "-f"])
         }
     })
 

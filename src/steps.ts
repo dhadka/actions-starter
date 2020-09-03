@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as execa from 'execa';
 import * as url from 'url';
+import * as open from 'open'
 
 class StringOutput {
   value: string;
@@ -39,6 +40,10 @@ export function echo(value: string): StringOutput {
   return new StringOutput(value);
 }
 
+export function browse(url: string): void {
+  open(url)
+}
+
 export function execute(command: string, args?: string[], quiet: boolean = false): string {
   if (!quiet) {
     console.log(`Running ${command} ${args ? args?.join(' ') : ''}`);
@@ -48,13 +53,19 @@ export function execute(command: string, args?: string[], quiet: boolean = false
   return returnValue.stdout;
 }
 
-export function writePackageJson(name: string, repo?: string, license: string = 'ISC', version: string = '1.0.0') {
+export function writePackageJson(
+  name: string,
+  repo?: string,
+  license: string = 'ISC',
+  description: string = "",
+  version: string = '1.0.0'
+) {
   console.log('Writing package.json');
 
   let content = `{
     "name": "${name}",
     "version": "${version}",
-    "description": "",
+    "description": "${description.replace('"', '\\"')}",
     "main": "lib/index.js",
     "scripts": {
         "run": "npm run build && node lib/index.js",
@@ -164,11 +175,14 @@ export function writeGitIgnore() {
 lib/`).toFile('.gitignore');
 }
 
-export function writeActionYml(name: string) {
+export function writeActionYml(
+  name: string,
+  description: string = ""
+) {
   console.log('Writing action.yml');
 
   echo(`name: '${name}'
-description: ''
+description: '${description.replace("'", "\\'")}'
 inputs:
   name:
     description: 'Your name'
@@ -202,10 +216,22 @@ jobs:
 `).toFile('.github/workflows/main.yml');
 }
 
-export function writeReadme(name: string, repo?: string) {
+export function writeReadme(
+  name: string,
+  repo?: string,
+  description: string = ""
+) {
   console.log('Writing README.md');
 
   let content = `# ${name}`;
+
+  if (description) {
+    content += `
+${description}`
+  } else {
+    content += `
+This is a starter action produced by [actions-starter](https://www.npmjs.com/package/actions-starter).`
+  }
 
   if (repo) {
     const repoUrl = url.parse(repo);
@@ -213,8 +239,9 @@ export function writeReadme(name: string, repo?: string) {
     const nwo = path?.substring(1, path.length - 4);
 
     content += `
+## Usage
 
-This is a starter workflow produced by [actions-starter](https://www.npmjs.com/package/actions-starter). To use this action, add the following step to your workflow:
+To use this action, add the following step to your GitHub Actions workflow:
 \`\`\`
 - name: Say hi to Dave
   uses: ${nwo}@master
