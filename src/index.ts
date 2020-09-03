@@ -130,26 +130,22 @@ program
     })
 
 program
-    .command("publish [type]")
-    .action((type, options) => { 
-        if (execute("git", ["status", "--porcelain"]).toString() !== '') {
+    .command("publish [version]")
+    .action((version, options) => { 
+        if (execute("git", ["status", "--porcelain"], true).toString() !== '') {
             console.error(`Found uncommitted changes, please commit first before publishing`)
             process.exit(-1)
         }
-        
-        if (!type) {
-            const project = JSON.parse("package.json")
-            type = project.version
+
+        if (!version) {
+            const project = JSON.parse(fs.readFileSync("package.json").toString())
+            execute("git", ["tag", `v${project.version}`])
+        } else {
+            execute("npm", ["version", version])
         }
 
-        if (type === 'major' || type == 'minor' || type == 'patch') {
-            execute("npm", ["version", type])
-        } else if (semver.valid(type)) {
-            execute("npm", ["version", type])
-        } else {
-            console.error(`'${type} is not a valid option. Must be 'major', 'minor', 'patch', or a version number like '1.6.2'`)
-            process.exit(-1)
-        }
+        execute("git", ["push"])
+        execute("git", ["push", "--tags"])
     })
 
 program.parse(process.argv);

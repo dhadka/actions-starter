@@ -39,8 +39,11 @@ export function echo(value: string): StringOutput {
   return new StringOutput(value);
 }
 
-export function execute(command: string, args?: string[]): string {
-  console.log(`Running ${command} ${args ? args?.join(' ') : ''}`);
+export function execute(command: string, args?: string[], quiet: boolean = false): string {
+  if (!quiet) {
+    console.log(`Running ${command} ${args ? args?.join(' ') : ''}`);
+  }
+
   const returnValue = execa.sync(command, args);
   return returnValue.stdout;
 }
