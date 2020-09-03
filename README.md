@@ -29,11 +29,17 @@ Jest for testing, and a GitHub Actions CI workflow.  This simple project can be 
 configured with the various options, including:
 
 **`--project`** - The project name. If not specified, defaults to the folder name.
+
 **`--shortDescription`** - A short description for the project.
-**`--license`** - The license to use, such as `ISC` or `MIT`.
+
+**`--license`** - The license to use, such as `MIT`. This will also add the LICENSE text.
+
 **`--test`** - Use `jest` (default) or `mocha` for testing.
+
 **`--initialVersion`** - The initial version. If not specified, defaults to `1.0.0`.
+
 **`--deps`** - One or more additional dependencies to install.
+
 **`--devDeps`** - One or more additional development dependencies to install.
 
 ## Publish Project
