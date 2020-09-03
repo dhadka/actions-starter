@@ -19,7 +19,7 @@ class StringOutput {
     console.log(this.value);
   }
 
-  asString(): string {
+  toString(): string {
     return this.value;
   }
 }

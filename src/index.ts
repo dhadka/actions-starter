@@ -161,7 +161,7 @@ program
     .description("publish the action by bumping the version number, creating version tags, and pushing to GitHub")
     .option("-l, --latest", "Create or update the tag 'latest'")
     .action((version, options) => { 
-        if (execute("git", ["status", "--porcelain"], true).toString().trim() !== '') {
+        if (execute("git", ["status", "--porcelain"], true).trim() !== '') {
             console.error(`Found uncommitted changes, please commit first before publishing`)
             process.exit(-1)
         }
@@ -169,7 +169,7 @@ program
         if (!version) {
             version = getVersion()
 
-            if (execute("git", ["tag", "-l", `v${version}`], true).toString().trim() !== '') {
+            if (execute("git", ["tag", "-l", `v${version}`], true).trim() !== '') {
                 console.error(`Tag v${version} already exists, can not publish`)
                 process.exit(-1)
             }
@@ -191,7 +191,7 @@ program
             execute("git", ["tag", "-f", `latest`])
         }
 
-        if (execute("git", ["remote", "-v"], true).toString().trim() === '') {
+        if (execute("git", ["remote", "-v"], true).trim() === '') {
             console.log("No Git remote is configured. Will not push changes.")
         } else {
             // TODO: Only publish from master
