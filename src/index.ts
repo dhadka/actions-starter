@@ -141,6 +141,12 @@ program
 
         if (!version) {
             version = getVersion()
+            
+            if (execute("git", ["tag", "-l", `v${version}`]).toString().trim() !== '') {
+                console.error(`Tag v${version} already exists, can not publish`)
+                process.exit(-1)
+            }
+
             execute("git", ["tag", `v${version}`])
         } else {
             execute("npm", ["version", version])
