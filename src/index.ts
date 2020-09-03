@@ -132,7 +132,7 @@ program
 program
     .command("publish [version]")
     .action((version, options) => { 
-        if (execute("git", ["status", "--porcelain"], true).toString() !== '') {
+        if (execute("git", ["status", "--porcelain"], true).toString().trim() !== '') {
             console.error(`Found uncommitted changes, please commit first before publishing`)
             process.exit(-1)
         }
@@ -144,8 +144,12 @@ program
             execute("npm", ["version", version])
         }
 
-        execute("git", ["push"])
-        execute("git", ["push", "--tags"])
+        if (execute("git", ["remote", "-v"], true).toString().trim() === '') {
+            console.log("No Git remote is configured. Will not push changes.")
+        } else {
+            execute("git", ["push"])
+            execute("git", ["push", "--tags"])
+        }
     })
 
 program.parse(process.argv);
