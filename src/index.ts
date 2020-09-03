@@ -19,7 +19,8 @@ import {
     mkdir,
     writeIndexJs,
     writeTestJs,
-    writeCIAction
+    writeCIAction,
+    getVersion
 } from './steps'
 
 program
@@ -131,6 +132,7 @@ program
 
 program
     .command("publish [version]")
+    .option("-u, --update", "Add or update the major version tag, such as v2")
     .action((version, options) => { 
         if (execute("git", ["status", "--porcelain"], true).toString().trim() !== '') {
             console.error(`Found uncommitted changes, please commit first before publishing`)
@@ -138,10 +140,18 @@ program
         }
 
         if (!version) {
-            const project = JSON.parse(fs.readFileSync("package.json").toString())
-            execute("git", ["tag", `v${project.version}`])
+            version = getVersion()
+            execute("git", ["tag", `v${version}`])
         } else {
             execute("npm", ["version", version])
+        }
+
+        version = getVersion()
+        console.log(`New version is ${version}`)
+
+        if (options.update) {
+            const major = semver.major(version)
+            execute("git", ["tag", "-f", `v${major}`])
         }
 
         if (execute("git", ["remote", "-v"], true).toString().trim() === '') {

@@ -24,6 +24,11 @@ actions publish           # Publish the current version
 actions publish minor     # Increment the minor version field and publish
 ```
 
+You can also add the `-u` option to add or update a "major version" tag.  For example, if the current
+version is `v2.1.0`, the major version tag is `v2`.  Additionally, each time you increment the minor
+or patch numbers, it will update `v2` to the latest version.  This way, consumers of your action
+can always use the latest major version of your action.
+
 ## Open in Editor
 
 ```

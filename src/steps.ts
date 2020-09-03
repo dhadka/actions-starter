@@ -226,3 +226,7 @@ This is a starter workflow produced by [actions-starter](https://www.npmjs.com/p
 
   echo(content).toFile('README.md');
 }
+
+export function getVersion() {
+  return JSON.parse(fs.readFileSync("package.json").toString()).version
+}
