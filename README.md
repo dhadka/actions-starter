@@ -15,9 +15,9 @@ actions init --repo https://github.com/dhadka/test-starter
 
 ## Publish Project
 
-Use `actions publish` to generate a tag for your action.  Similar to `npm version`, you can
-specify the version field to increment, such as `major`, `minor`, or `patch`.  This command
-will also push the new tag to GitHub.  For example:
+Use `actions publish` to increment the package version, generate a new tag, commit and tag the
+new version, and push all changes to GitHub.  Similar to `npm version`, you can specify the version
+field to increment, such as `major`, `minor`, or `patch`.
 
 ```
 actions publish minor
