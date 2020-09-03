@@ -13,11 +13,14 @@ cd test-starter
 actions init --repo https://github.com/dhadka/test-starter
 ```
 
+The result is a simple hello world example with default settings, including Lint, prettier,
+Jest for testing, and a GitHub Actions CI workflow.
+
 ## Publish Project
 
-Use `actions publish` to increment the package version, generate a new tag, commit and tag the
-new version, and push everything to GitHub.  Similar to `npm version`, you can specify the version
-field to increment, such as `major`, `minor`, or `patch`.
+Use `actions publish` to increment the package version, commit and tag the new version, and push
+everything to GitHub.  Similar to `npm version`, you can specify the version field to increment,
+such as `major`, `minor`, or `patch`.
 
 ```
 actions publish           # Publish the current version
@@ -26,9 +29,8 @@ actions publish minor     # Increment the minor version field and publish
 
 In addition to creating the full version number, such as `v1.2.0`, this command also creates a
 tag for the major version number, such as `v1`.  This encourages consumers of your action to target
-the major version only, meaning they automatically run the latest version of your action.
-You can optionally use `--latest` to also create or update the `latest` tag, so consumers can always
-reference the most recently published version of your action.
+the major version only, meaning they automatically run the most recently published version.
+You can optionally use `--latest` to also create or update the `latest` tag.
 
 ## Other Commands
 
