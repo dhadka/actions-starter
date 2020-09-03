@@ -4,8 +4,8 @@ Quickly configure repos for writing new GitHub Actions
 
 ## Setup Project
 
-Create an empty repository on GitHub and an empty folder on your local computer.  Then
-run `actions init --repo <url>` to initialize the repo.  For example:
+Before running this command, create an empty repository on GitHub and an empty folder on your
+local computer.  Then run `actions init --repo <url>` to initialize the repo.  For example:
 
 ```
 mkdir test-starter
@@ -20,7 +20,8 @@ new version, and push all changes to GitHub.  Similar to `npm version`, you can 
 field to increment, such as `major`, `minor`, or `patch`.
 
 ```
-actions publish minor
+actions publish           # Publish the current version
+actions publish minor     # Increment the minor version field and publish
 ```
 
 ## Open in Editor
