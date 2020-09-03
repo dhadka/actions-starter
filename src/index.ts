@@ -4,6 +4,7 @@ import * as program from 'commander'
 import * as chalk from 'chalk'
 import * as path from 'path'
 import * as fs from 'fs'
+import * as semver from 'semver'
 import {
     execute,
     exists,
@@ -126,6 +127,29 @@ program
         console.log("      " + chalk.bold("git add ."))
         console.log("      " + chalk.bold(`git commit -m \"Publish version ${version}\"`))
         console.log("      " + chalk.bold(`git push origin ${branch}`))
+    })
+
+program
+    .command("publish [type]")
+    .action((type, options) => { 
+        if (execute("git", ["status", "--porcelain"]).toString() !== '') {
+            console.error(`Found uncommitted changes, please commit first before publishing`)
+            process.exit(-1)
+        }
+        
+        if (!type) {
+            const project = JSON.parse("package.json")
+            type = project.version
+        }
+
+        if (type === 'major' || type == 'minor' || type == 'patch') {
+            execute("npm", ["version", type])
+        } else if (semver.valid(type)) {
+            execute("npm", ["version", type])
+        } else {
+            console.error(`'${type} is not a valid option. Must be 'major', 'minor', 'patch', or a version number like '1.6.2'`)
+            process.exit(-1)
+        }
     })
 
 program.parse(process.argv);
