@@ -159,7 +159,7 @@ program
 program
     .command("publish [version]")
     .description("publish the action by bumping the version number, creating version tags, and pushing to GitHub")
-    .option("-u, --update", "Add or update the major version tag, such as v2")
+    .option("-l, --latest", "Create or update the tag 'latest'")
     .action((version, options) => { 
         if (execute("git", ["status", "--porcelain"], true).toString().trim() !== '') {
             console.error(`Found uncommitted changes, please commit first before publishing`)
@@ -182,9 +182,11 @@ program
             console.log(`New version is ${version}`)
         }
 
-        if (options.update) {
-            const major = semver.major(version)
-            execute("git", ["tag", "-f", `v${major}`])
+        const major = semver.major(version)
+        execute("git", ["tag", "-f", `v${major}`])
+
+        if (options.latest) {
+            execute("git", ["tag", "-f", `latest`])
         }
 
         if (execute("git", ["remote", "-v"], true).toString().trim() === '') {

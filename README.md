@@ -16,7 +16,7 @@ actions init --repo https://github.com/dhadka/test-starter
 ## Publish Project
 
 Use `actions publish` to increment the package version, generate a new tag, commit and tag the
-new version, and push all changes to GitHub.  Similar to `npm version`, you can specify the version
+new version, and push everything to GitHub.  Similar to `npm version`, you can specify the version
 field to increment, such as `major`, `minor`, or `patch`.
 
 ```
@@ -24,19 +24,16 @@ actions publish           # Publish the current version
 actions publish minor     # Increment the minor version field and publish
 ```
 
-You can also add the `-u` option to add or update a "major version" tag.  For example, if the current
-version is `v2.1.0`, the major version tag is `v2`.  Additionally, each time you increment the minor
-or patch numbers, it will update `v2` to the latest version.  This way, consumers of your action
-can always use the latest major version of your action.
+In addition to creating the full version number, such as `v1.2.0`, this command also creates a
+tag for the major version number, such as `v1`.  This encourages consumers of your action to target
+the major version only, meaning they automatically run the latest version of your action.
+You can optionally use `--latest` to also create or update the `latest` tag, so consumers can always
+reference the most recently published version of your action.
 
-## Open in Editor
-
-```
-actions edit
-```
-
-## Open GitHub Repo in Browser
+## Other Commands
 
 ```
-actions open
+actions edit     # Open in VSCode
+actions open     # Open the GitHub repo in your browser
+actions docs     # Open the GitHub Actions documentation
 ```
