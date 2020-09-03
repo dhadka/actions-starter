@@ -177,13 +177,15 @@ program
             execute("git", ["tag", `v${version}`])
         } else {
             execute("npm", ["version", version])
-
-            version = getVersion()
-            console.log(`New version is ${version}`)
+            console.log(`New version is ${getVersion()}`)
         }
 
-        const major = semver.major(version)
-        execute("git", ["tag", "-f", `v${major}`])
+        const major = semver.major(getVersion())
+        if (version.toLowerCase().startsWith("pre")) {
+            console.log(`Will not update v${major} tag since this is a pre-release`)
+        } else {
+            execute("git", ["tag", "-f", `v${major}`])
+        }
 
         if (options.latest) {
             execute("git", ["tag", "-f", `latest`])
