@@ -26,14 +26,47 @@ function cli(args: string[], cwd: string = "."): Promise<Result> {
     })
 }
 
-function expectSuccess(result: Result) {
+function expectSuccess(result: Result): void {
     expect(result).toBeDefined()
     expect(result.code).toBe(0)
     expect(result.error).toBeNull()
     expect(result.stderr).toBe('')
 }
 
-async function testInit(dir: string, options: string[] = [], shouldSucceed: boolean = true) {
+function expectFailure(result: Result): void {
+    expect(result).toBeDefined()
+    expect(result.code).toBeTruthy() // any non-zero result
+}
+
+function readJson(path: string): any {
+    return JSON.parse(fs.readFileSync(path).toString())
+}
+
+function expectVersion(dir: string, version: string): void {
+    expect(readJson(path.join(dir, "package.json")).version).toBe(version)
+    expect(readJson(path.join(dir, "package-lock.json")).version).toBe(version)  
+}
+
+async function expectTags(dir: string, tags: string[]): Promise<void> {
+    let expectedCommit: string | null = null
+
+    for (const tag of tags) {
+        let result = await execa("git", ["tag", "-l", tag], { cwd: dir })
+        expect(result.exitCode).toBe(0)
+        expect(result.stdout.trim()).toBe(tag)
+
+        result = await execa("git", ["rev-list", "-n", "1", tag], { cwd: dir })
+        const commit = result.stdout.trim()
+
+        if (!expectedCommit) {
+            expectedCommit = commit
+        } else {
+            expect(commit).toBe(expectedCommit)
+        }
+    }
+}
+
+async function testInit(dir: string, options: string[] = [], shouldSucceed: boolean = true): Promise<void> {
     jest.setTimeout(150000);
 
     if (fs.existsSync(dir)) {
@@ -43,8 +76,6 @@ async function testInit(dir: string, options: string[] = [], shouldSucceed: bool
     fs.mkdirSync(dir, { recursive: true })
     
     let initResult = await cli(['init'].concat(options), dir)
-    console.log(initResult.stdout)
-    console.log(initResult.stderr)
 
     if (shouldSucceed) {
         expectSuccess(initResult)
@@ -58,7 +89,7 @@ async function testInit(dir: string, options: string[] = [], shouldSucceed: bool
         let lintResult = await execa("npm", ["run", "lint"], { cwd: dir })
         expect(lintResult.exitCode).toBe(0)
     } else {
-        expect(initResult.code).toBeTruthy() // any non-zero result
+        expectFailure(initResult)
     }
 }
 
@@ -78,6 +109,52 @@ test('init works with mocha test framework', async() => {
 
 test('init fails when given unsupported test framework', async() => {
     await testInit("temp/test_invalid_test", ["--test", "foo"], false)
+})
+
+test('publish works', async() => {
+    const dir = "temp/test_publish"
+
+    await testInit(dir)
+
+    let publishResult = await cli(["publish"], dir)
+    expectFailure(publishResult) // uncommitted changes
+
+    await execa("git", ["add", "."], { cwd: dir })
+    await execa("git", ["commit", "-m", "Initial commit"], { cwd: dir })
+
+    publishResult = await cli(["publish"], dir)
+    expectSuccess(publishResult)
+    expectVersion(dir, "1.0.0")
+    expectTags(dir, ["v1", "v1.0.0"])
+
+    publishResult = await cli(["publish"], dir)
+    expectFailure(publishResult) // version already published
+    expectVersion(dir, "1.0.0")
+
+    publishResult = await cli(["publish", "patch"], dir)
+    expectSuccess(publishResult)
+    expectVersion(dir, "1.0.1")
+    expectTags(dir, ["v1", "v1.0.1"])
+
+    publishResult = await cli(["publish", "patch"], dir)
+    expectSuccess(publishResult)
+    expectVersion(dir, "1.0.2")
+    expectTags(dir, ["v1", "v1.0.2"])
+
+    publishResult = await cli(["publish", "major"], dir)
+    expectSuccess(publishResult)
+    expectVersion(dir, "2.0.0")
+    expectTags(dir, ["v2", "v2.0.0"])
+
+    publishResult = await cli(["publish", "patch"], dir)
+    expectSuccess(publishResult)
+    expectVersion(dir, "2.0.1")
+    expectTags(dir, ["v2", "v2.0.1"])
+
+    publishResult = await cli(["publish", "minor"], dir)
+    expectSuccess(publishResult)
+    expectVersion(dir, "2.1.0")
+    expectTags(dir, ["v2", "v2.1.0"])
 })
 
 
