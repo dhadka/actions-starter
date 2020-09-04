@@ -297,3 +297,11 @@ export function addLicenseText(licenseName: string, authorName: string) {
 export function getVersion() {
   return JSON.parse(fs.readFileSync("package.json").toString()).version
 }
+
+export function getUserName() {
+  try {
+    return execute("git", ["config", "user.name"], true)
+  } catch (error) {
+    return ''
+  }
+}

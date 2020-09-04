@@ -23,7 +23,8 @@ import {
     writeCIAction,
     getVersion,
     browse,
-    addLicenseText
+    addLicenseText,
+    getUserName
 } from './steps'
 
 program
@@ -68,7 +69,7 @@ program
     .option('--devDeps <dependencies...>', 'List of additional dev dependencies to install')
     .action((inputs) => {
         let name = inputs.project || path.basename(process.cwd())
-        let author = inputs.author || execute("git", ["config", "user.name"], true)
+        let author = inputs.author || getUserName()
         let repo = inputs.repo
         let license = inputs.license
         let description = inputs.shortDescription
