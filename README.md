@@ -1,5 +1,7 @@
 # Actions Starter
 
+![CI](https://github.com/dhadka/actions-starter/workflows/CI/badge.svg?branch=master)
+
 Quickly configure repos for writing new GitHub Actions
 
 ## Installation
