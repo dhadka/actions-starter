@@ -39,10 +39,12 @@ async function testInit(dir: string, options: string[] = [], shouldSucceed: bool
     if (fs.existsSync(dir)) {
         fs.rmdirSync(dir, { recursive: true })
     }
-    
+
     fs.mkdirSync(dir, { recursive: true })
     
     let initResult = await cli(['init'].concat(options), dir)
+    console.log(initResult.stdout)
+    console.log(initResult.stderr)
 
     if (shouldSucceed) {
         expectSuccess(initResult)
