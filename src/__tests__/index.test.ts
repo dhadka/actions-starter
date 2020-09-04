@@ -35,7 +35,11 @@ function expectSuccess(result: Result) {
 
 async function testInit(dir: string, options: string[] = [], shouldSucceed: boolean = true) {
     jest.setTimeout(150000);
-    fs.rmdirSync(dir, { recursive: true })
+
+    if (fs.existsSync(dir)) {
+        fs.rmdirSync(dir, { recursive: true })
+    }
+    
     fs.mkdirSync(dir, { recursive: true })
     
     let initResult = await cli(['init'].concat(options), dir)
