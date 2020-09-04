@@ -8,10 +8,6 @@ Install with `npm` globally:
 ```
 npm install --global actions-starter
 ```
-or as a development dependency for your project:
-```
-npm install --save-dev actions-starter
-```
 
 ## Setup Project
 
