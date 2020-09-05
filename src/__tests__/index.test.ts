@@ -1,41 +1,27 @@
 import * as path from 'path'
 import * as fs from 'fs'
 import * as execa from 'execa'
-import { exec } from 'child_process'
 
-interface Result {
-    code: number,
-    error: Error | null,
-    stdout: string,
-    stderr: string
+async function cli(args: string[], cwd: string = "."): Promise<execa.ExecaReturnValue<string>> {
+    return await execa(
+        'node',
+        [path.resolve('./lib/index')].concat(args),
+        {
+            cwd: cwd,
+            reject: false // return error instead of throwing
+        }
+    )
 }
 
-function cli(args: string[], cwd: string = "."): Promise<Result> {
-    return new Promise(resolve => { 
-        exec(`node ${path.resolve('./lib/index')} ${args.join(' ')}`,
-            { cwd }, 
-            (error, stdout, stderr) => { 
-                resolve({
-                    code: error && error.code ? error.code : 0,
-                    error,
-                    stdout,
-                    stderr
-                })
-            }
-        )
-    })
-}
-
-function expectSuccess(result: Result): void {
+function expectSuccess(result: execa.ExecaReturnValue<string>): void {
     expect(result).toBeDefined()
-    expect(result.code).toBe(0)
-    expect(result.error).toBeNull()
+    expect(result.exitCode).toBe(0)
     expect(result.stderr).toBe('')
 }
 
-function expectFailure(result: Result): void {
+function expectFailure(result: execa.ExecaReturnValue<string>): void {
     expect(result).toBeDefined()
-    expect(result.code).toBeTruthy() // any non-zero result
+    expect(result.exitCode).toBeTruthy() // any non-zero result
 }
 
 function readJson(path: string): any {
